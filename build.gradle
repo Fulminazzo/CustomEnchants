@@ -1,0 +1,116 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'maven-publish'
+}
+
+group = 'it.fulminazzo'
+version = '1.0'
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'maven-publish'
+
+    group = "${rootProject.group}"
+    version = "${rootProject.version}"
+
+    this.ext.getFileName = { name ->
+        if (name == null) throw new RuntimeException("getFileName(): Name cannot be null!")
+        String fileName = name
+        final String projectName = rootProject.name
+        if (projectName != fileName) fileName = "${projectName}-" + fileName
+        return fileName + "-${rootProject.version}"
+    }
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = "spigotmc-repo"
+            url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+
+            content {
+                includeGroup 'org.bukkit'
+                includeGroup 'org.spigotmc'
+            }
+        }
+        maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url = 'https://oss.sonatype.org/content/repositories/central' }
+        mavenLocal()
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok:1.18.30'
+        annotationProcessor 'org.projectlombok:lombok:1.18.30'
+        compileOnly 'org.jetbrains:annotations:24.1.0'
+
+        if ("${project.name}".contains("12")) compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
+        else compileOnly 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+
+        testImplementation platform('org.junit:junit-bom:5.9.1')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+
+        if ("${project.name}" != "base") implementation(project(":base"))
+    }
+
+    shadowJar {
+        exclude("META-INF/**")
+        archiveFileName = "${getFileName(project.name)}.jar"
+        manifest {
+            attributes ("Manifest-Version": "${rootProject.version}")
+        }
+    }
+
+    tasks.register('sourcesJar', Jar) {
+        from sourceSets.main.allJava
+        archiveClassifier = 'sources'
+    }
+
+    jar {
+        enabled = true // Required for sub projects depending on sub projects
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveFileName = "${getFileName(project.name)}-original.jar"
+        dependsOn(shadowJar)
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    build {
+        dependsOn(publishToMavenLocal)
+    }
+
+    publishing {
+        publications {
+            mavenPublication(MavenPublication) {
+                String projectName = "${project.name}"
+                String rootProjectName = "${rootProject.name}"
+                groupId = "${rootProject.group}" + (projectName == rootProjectName ? "" : ".${rootProjectName}")
+                artifactId = "${project.name}"
+                version = "${rootProject.version}"
+                from components.java
+
+                artifact sourcesJar
+            }
+        }
+
+        repositories {
+            maven {
+                url "https://repo.fulminazzo.it/releases"
+                credentials {
+                    username = System.getenv("REPO_USERNAME")
+                    password = System.getenv("REPO_PASSWORD")
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation(project(":v12"))
+    implementation(project(":v13"))
+}
