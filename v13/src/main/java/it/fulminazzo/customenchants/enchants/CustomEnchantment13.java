@@ -1,5 +1,6 @@
 package it.fulminazzo.customenchants.enchants;
 
+import it.fulminazzo.customenchants.handlers.EventHandler;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -20,6 +22,7 @@ class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
     private final int maxLevel;
     private final @NotNull EnchantmentTarget itemTarget;
     private final @NotNull List<Enchantment> conflicts;
+    private final HashMap<String, EventHandler<?>> eventHandlers;
 
     public CustomEnchantment13(@NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
         super(NamespacedKey.minecraft(name));
@@ -27,6 +30,7 @@ class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
         this.maxLevel = maxLevel;
         this.itemTarget = itemTarget;
         this.conflicts = new ArrayList<>();
+        this.eventHandlers = new HashMap<>();
         if (conflicts != null) addConflicts(conflicts);
         CUSTOM_ENCHANTMENTS.add(this);
     }

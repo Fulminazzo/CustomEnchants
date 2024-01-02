@@ -1,5 +1,5 @@
 rootProject.name = 'CustomEnchants'
-include 'base'
+include 'common'
 include 'v12'
 include 'v13'
 
