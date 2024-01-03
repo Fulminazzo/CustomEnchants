@@ -77,11 +77,6 @@ allprojects {
         }
     }
 
-    tasks.register('sourcesJar', Jar) {
-        from sourceSets.main.delombokTask
-        archiveClassifier = 'sources'
-    }
-
     jar {
         enabled = true // Required for sub projects depending on sub projects
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -100,6 +95,12 @@ allprojects {
 
 dependencies {
     subprojects.each {implementation project(it.path)}
+}
+
+tasks.register('sourcesJar', Jar) {
+    from sourceSets.main.delombokTask
+    from subprojects.collect { it.sourceSets.main.delombokTask }
+    archiveClassifier = 'sources'
 }
 
 publishing {
