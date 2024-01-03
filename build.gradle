@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'maven-publish'
+    id 'io.freefair.lombok' version '8.4'
 }
 
 group = 'it.fulminazzo'
@@ -11,6 +12,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'maven-publish'
+    apply plugin: 'io.freefair.lombok'
 
     group = "${rootProject.group}"
     version = "${rootProject.version}"
@@ -76,7 +78,7 @@ allprojects {
     }
 
     tasks.register('sourcesJar', Jar) {
-        from sourceSets.main.allJava
+        from sourceSets.main.delombokTask
         archiveClassifier = 'sources'
     }
 
