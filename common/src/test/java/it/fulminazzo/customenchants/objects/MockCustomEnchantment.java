@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,12 +27,22 @@ public class MockCustomEnchantment implements CustomEnchantment {
     }
 
     @Override
+    public <T> T getKey() {
+        return null;
+    }
+
+    @Override
     public int getId() {
         return Integer.MAX_VALUE;
     }
 
     @Override
     public List<Enchantment> getConflicts() {
+        return null;
+    }
+
+    @Override
+    public JavaPlugin getPlugin() {
         return null;
     }
 }

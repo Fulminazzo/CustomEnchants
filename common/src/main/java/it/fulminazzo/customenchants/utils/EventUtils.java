@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -17,7 +18,7 @@ public class EventUtils {
             "VillagerAcquireTradeEvent", "VillagerCareerChangeEvent", "VillagerReplenishTradeEvent", "HangingEvent", "RaidSpawnWaveEvent",
             "VehicleBlockCollisionEvent", "VehicleCollisionEvent", "VehicleCreateEvent", "VehicleMoveEvent", "VehicleUpdateEvent", "LootGenerateEvent"};
 
-    public static boolean isClassEventPlayer(Class<?> clazz) {
+    public static boolean isClassEventPlayer(@Nullable Class<?> clazz) {
         if (clazz == null) return false;
         if (!Event.class.isAssignableFrom(clazz)) return false;
         if (Arrays.stream(INVALID_EVENTS).anyMatch(c -> c.equals(clazz.getSimpleName()))) return false;
@@ -25,7 +26,7 @@ public class EventUtils {
         return !ReflectionUtils.getFields(clazz, Entity.class).isEmpty();
     }
 
-    public static boolean isClassEventPlayerForSure(Class<?> clazz) {
+    public static boolean isClassEventPlayerForSure(@Nullable Class<?> clazz) {
         if (clazz == null) return false;
         if (!Event.class.isAssignableFrom(clazz)) return false;
         if (Arrays.stream(INVALID_EVENTS).anyMatch(c -> c.equals(clazz.getSimpleName()))) return false;

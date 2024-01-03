@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,15 +17,19 @@ import java.util.List;
 @Getter
 @Setter
 class CustomEnchantment12 extends Enchantment implements CustomEnchantment {
+    private final JavaPlugin plugin;
     private final @NotNull String name;
     private int startLevel = 1;
-    private final int maxLevel;
-    private final @NotNull EnchantmentTarget itemTarget;
+    private int maxLevel;
+    private boolean treasure = false;
+    private boolean cursed = false;
+    private @NotNull EnchantmentTarget itemTarget;
     private final @NotNull List<Enchantment> conflicts;
-    private final HashMap<String, EventHandler<?>> eventHandlers;
+    private final @NotNull HashMap<String, EventHandler<?>> eventHandlers;
 
-    public CustomEnchantment12(@NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
+    public CustomEnchantment12(JavaPlugin plugin, @NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
         super(getUnusedID());
+        this.plugin = plugin;
         this.name = name.toUpperCase();
         this.maxLevel = maxLevel;
         this.itemTarget = itemTarget;
@@ -35,16 +40,6 @@ class CustomEnchantment12 extends Enchantment implements CustomEnchantment {
     }
 
     @Override
-    public boolean isTreasure() {
-        return false;
-    }
-
-    @Override
-    public boolean isCursed() {
-        return false;
-    }
-
-    @Override
     public boolean conflictsWith(Enchantment enchantment) {
         return CustomEnchantment.super.conflictsWith(enchantment);
     }
@@ -52,6 +47,11 @@ class CustomEnchantment12 extends Enchantment implements CustomEnchantment {
     @Override
     public boolean canEnchantItem(ItemStack itemStack) {
         return CustomEnchantment.super.canEnchantItem(itemStack);
+    }
+
+    @Override
+    public <T> @Nullable T getKey() {
+        return null;
     }
 
     private static @NotNull Integer getUnusedID() {

@@ -17,8 +17,9 @@ import java.util.List;
 
 @Getter
 @Setter
-class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
+class CustomEnchantment203 extends Enchantment implements CustomEnchantment {
     private final JavaPlugin plugin;
+    private final @NotNull NamespacedKey key;
     private final @NotNull String name;
     private int startLevel = 1;
     private int maxLevel;
@@ -28,8 +29,9 @@ class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
     private final @NotNull List<Enchantment> conflicts;
     private final @NotNull HashMap<String, EventHandler<?>> eventHandlers;
 
-    public CustomEnchantment13(JavaPlugin plugin, @NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
-        super(NamespacedKey.minecraft(name));
+    public CustomEnchantment203(JavaPlugin plugin, @NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
+        super();
+        this.key = NamespacedKey.minecraft(name);
         this.plugin = plugin;
         this.name = name.toUpperCase();
         this.maxLevel = maxLevel;
@@ -41,22 +43,17 @@ class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
     }
 
     @Override
-    public NamespacedKey getKey() {
-        return super.getKey();
-    }
-
-    @Override
     public int getId() {
         return -1;
     }
 
     @Override
-    public boolean conflictsWith(Enchantment enchantment) {
+    public boolean conflictsWith(@Nullable Enchantment enchantment) {
         return CustomEnchantment.super.conflictsWith(enchantment);
     }
 
     @Override
-    public boolean canEnchantItem(ItemStack itemStack) {
+    public boolean canEnchantItem(@Nullable ItemStack itemStack) {
         return CustomEnchantment.super.canEnchantItem(itemStack);
     }
 }

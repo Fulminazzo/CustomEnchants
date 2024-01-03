@@ -1,15 +1,34 @@
 package it.fulminazzo.customenchants.handlers;
 
+import it.fulminazzo.customenchants.enchants.CustomEnchantment;
+import it.fulminazzo.customenchants.enchants.EnchantListener;
+import it.fulminazzo.customenchants.utils.ReflectionUtils;
 import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unchecked")
 public class EventHandler<T extends Event> {
     @Getter
     private final Class<T> event;
     private final Consumer<T> runner;
+    private Listener listener;
 
     public EventHandler(Class<T> event, Consumer<T> runner) {
         this.event = event;
@@ -18,6 +37,42 @@ public class EventHandler<T extends Event> {
 
     public void apply(T t) {
         runner.accept(t);
+    }
+
+    public void register(CustomEnchantment enchantment, @NotNull JavaPlugin plugin) {
+        if (!isRegistered()) {
+            listener = new EnchantListener();
+            Bukkit.getPluginManager().registerEvent(event, listener, EventPriority.NORMAL, (l, e) -> {
+                if (!event.equals(e.getClass())) return;
+                if (ReflectionUtils.getFields(e.getClass(), Entity.class, e).stream()
+                        .filter(en -> en instanceof LivingEntity || en instanceof Item)
+                        .anyMatch(en -> {
+                            List<ItemStack> itemStacks = new ArrayList<>();
+                            if (en instanceof Item) itemStacks.add(((Item) en).getItemStack());
+                            else {
+                                EntityEquipment equipment = ((LivingEntity) en).getEquipment();
+                                if (equipment == null) return false;
+                                itemStacks.add(equipment.getHelmet());
+                                itemStacks.add(equipment.getChestplate());
+                                itemStacks.add(equipment.getLeggings());
+                                itemStacks.add(equipment.getBoots());
+                                itemStacks.add(equipment.getItemInMainHand());
+                                itemStacks.add(equipment.getItemInOffHand());
+                            }
+                            return itemStacks.stream()
+                                    .filter(Objects::nonNull)
+                                    .anyMatch(i -> i.getEnchantments().containsKey((Enchantment) enchantment));
+                        })) apply((T) e);
+            }, plugin);
+        }
+    }
+
+    public void unregister() {
+        if (isRegistered()) HandlerList.unregisterAll(listener);
+    }
+
+    public boolean isRegistered() {
+        return listener != null;
     }
 
     public boolean equals(Class<?> clazz) {

@@ -71,19 +71,19 @@ public class ReflectionUtils {
     public static <T> T getField(@NotNull Class<?> clazz, String name, Object object) {
         try {
             return (T) getField(clazz, name).get(object);
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Field getField(@NotNull Class<?> clazz, String name) {
+    public static @Nullable Field getField(@NotNull Class<?> clazz, String name) {
         return getFields(clazz).stream()
                 .filter(f -> f.getName().equals(name))
                 .peek(f -> f.setAccessible(true))
                 .findFirst().orElse(null);
     }
 
-    public static <T> List<T> getFields(@NotNull Class<?> clazz, Class<?> type, Object object) {
+    public static <T> @NotNull List<T> getFields(@NotNull Class<?> clazz, @NotNull Class<?> type, Object object) {
         return getFields(clazz, type).stream()
                 .map(f -> {
                     try {
@@ -94,14 +94,14 @@ public class ReflectionUtils {
                 }).collect(Collectors.toList());
     }
 
-    public static List<Field> getFields(@NotNull Class<?> clazz, Class<?> type) {
+    public static @NotNull List<Field> getFields(@NotNull Class<?> clazz, @NotNull Class<?> type) {
         return getFields(clazz).stream()
                 .filter(f -> type.isAssignableFrom(f.getType()))
                 .peek(f -> f.setAccessible(true))
                 .collect(Collectors.toList());
     }
 
-    public static List<Field> getFields(@NotNull Class<?> clazz) {
+    public static @NotNull List<Field> getFields(@NotNull Class<?> clazz) {
         List<Field> fields = new ArrayList<>();
         while (clazz != null) {
             fields.addAll(Arrays.asList(clazz.getFields()));

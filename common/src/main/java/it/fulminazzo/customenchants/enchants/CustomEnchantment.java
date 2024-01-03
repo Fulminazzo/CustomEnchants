@@ -6,12 +6,13 @@ import it.fulminazzo.customenchants.handlers.EventHandler;
 import it.fulminazzo.customenchants.utils.EventUtils;
 import it.fulminazzo.customenchants.utils.ReflectionUtils;
 import it.fulminazzo.customenchants.utils.VersionUtils;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -20,42 +21,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public interface CustomEnchantment {
     int CRITICAL_VERSION = 13;
+    double CRITICAL_VERSION2 = 20.3;
     List<CustomEnchantment> CUSTOM_ENCHANTMENTS = new ArrayList<>();
 
-    default <T extends Event> void handleEvent(T event) {
-        if (!EventUtils.isClassEventPlayerForSure(event.getClass())) {
-            if (ReflectionUtils.getFields(event.getClass(), Entity.class, event).stream().noneMatch(e -> e instanceof Player))
-                return;
-        }
-        getEventHandlers(event.getClass())
-                .stream().map(e -> (EventHandler<T>) e)
-                .forEach(e -> e.apply(event));
-    }
-
-    default <T extends Event> EventHandler<T> getEventHandler(String name) {
+    default <T extends Event> EventHandler<T> getEventHandler(@NotNull String name) {
         return (EventHandler<T>) getEventHandlers().get(name.toLowerCase());
     }
 
-    default List<EventHandler<?>> getEventHandlers(Class<?> clazz) {
-        return getEventHandlers().values().stream()
-                .filter(c -> c.equals(clazz))
-                .collect(Collectors.toList());
-    }
-
-    default void addEventHandler(String name, EventHandler<?> eventHandler) {
+    default void addEventHandler(String name, @NotNull EventHandler<?> eventHandler) {
         name = name.toLowerCase();
         if (getEventHandler(name) != null) throw new EventHandlerAlreadyPresent(name);
         if (!EventUtils.isClassEventPlayer(eventHandler.getEvent()))
             throw new NotValidEventClass(eventHandler.getEvent());
         getEventHandlers().put(name, eventHandler);
+        if (getPlugin() != null) eventHandler.register(this, getPlugin());
     }
 
-    default void removeEventHandler(String name) {
+    default void removeEventHandler(@NotNull String name) {
         getEventHandlers().remove(name.toLowerCase());
     }
 
@@ -63,7 +49,10 @@ public interface CustomEnchantment {
         HashMap<String, EventHandler<?>> eventHandlers = getEventHandlers();
         eventHandlers.keySet().stream()
                 .filter(k -> eventHandlers.get(k).equals(eventHandler))
-                .forEach(eventHandlers::remove);
+                .forEach(k -> {
+                    eventHandlers.get(k).unregister();
+                    eventHandlers.remove(k);
+                });
     }
 
     default void addConflicts(Enchantment @Nullable ... enchantments) {
@@ -86,6 +75,11 @@ public interface CustomEnchantment {
 
     default void register() {
         try {
+            if (VersionUtils.is1_(CRITICAL_VERSION2)) {
+                Map<?, Enchantment> cache = ReflectionUtils.getField(Registry.ENCHANTMENT.getClass(), "cache", Registry.ENCHANTMENT);
+                cache.put(getKey(), (Enchantment) this);
+                return;
+            }
             Field field = ReflectionUtils.getField(Enchantment.class, "acceptingNew");
             field.set(Enchantment.class, true);
             Enchantment.registerEnchantment((Enchantment) this);
@@ -96,8 +90,20 @@ public interface CustomEnchantment {
         }
     }
 
+    default void registerEventHandlers() {
+        if (getPlugin() != null)
+            getEventHandlers().values().stream()
+                    .filter(e -> !e.isRegistered())
+                    .forEach(e -> e.register(this, getPlugin()));
+    }
+
     default void unregister() {
         if (!isRegistered()) return;
+        if (VersionUtils.is1_(CRITICAL_VERSION2)) {
+            Map<?, Enchantment> cache = ReflectionUtils.getField(Registry.ENCHANTMENT.getClass(), "cache", Registry.ENCHANTMENT);
+            cache.remove(getKey());
+            return;
+        }
         String methodName = VersionUtils.is1_(CRITICAL_VERSION) ? "Key" : "Id";
         Map<?, Enchantment> byId = ReflectionUtils.getField(Enchantment.class, "by" + methodName, Enchantment.class);
         try {
@@ -109,7 +115,13 @@ public interface CustomEnchantment {
         byName.remove(getName());
     }
 
+    default void unregisterEventHandlers() {
+        getEventHandlers().values().forEach(EventHandler::unregister);
+    }
+
     String getName();
+
+    <T> @Nullable T getKey();
 
     int getId();
 
@@ -117,15 +129,27 @@ public interface CustomEnchantment {
 
     int getStartLevel();
 
+    void setMaxLevel(int startLevel);
+
+    int getMaxLevel();
+
+    void setItemTarget(EnchantmentTarget itemTarget);
+
     EnchantmentTarget getItemTarget();
 
+    void setTreasure(boolean treasure);
+
     boolean isTreasure();
+
+    void setCursed(boolean treasure);
 
     boolean isCursed();
 
     List<Enchantment> getConflicts();
 
     HashMap<String, EventHandler<?>> getEventHandlers();
+
+    JavaPlugin getPlugin();
 
     static void registerAll() {
         for (CustomEnchantment enchantment : CUSTOM_ENCHANTMENTS)

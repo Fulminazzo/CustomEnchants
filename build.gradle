@@ -23,6 +23,12 @@ allprojects {
         return fileName + "-${rootProject.version}"
     }
 
+    this.ext.getSpigotVersion = { name ->
+        name = name.replace("-", ".").substring(1)
+        if (!name.isNumber()) name = "20.2"
+        return "org.spigotmc:spigot-api:1.${name}-R0.1-SNAPSHOT"
+    }
+
     repositories {
         mavenCentral()
         maven {
@@ -44,8 +50,7 @@ allprojects {
         annotationProcessor 'org.projectlombok:lombok:1.18.30'
         compileOnly 'org.jetbrains:annotations:24.1.0'
 
-        if ("${project.name}".contains("12")) compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-        else compileOnly 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+        compileOnly(getSpigotVersion(project.name))
 
         if ("${project.name}" != "common") {
             implementation(project(":common"))
@@ -57,9 +62,8 @@ allprojects {
 
         testImplementation platform('org.junit:junit-bom:5.9.1')
         testImplementation 'org.junit.jupiter:junit-jupiter'
-        if ("${project.name}" == "common") testImplementation 'org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT'
-        else if ("${project.name}".contains("12")) testImplementation 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-        else testImplementation 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+
+        testImplementation(getSpigotVersion(project.name))
 
         testImplementation("it.fulminazzo:FulmiCollection:1.2")
         testImplementation 'org.mockito:mockito-core:4.11.0'
@@ -95,8 +99,7 @@ allprojects {
 }
 
 dependencies {
-    implementation(project(":v12"))
-    implementation(project(":v13"))
+    subprojects.each {implementation project(it.path)}
 }
 
 publishing {
