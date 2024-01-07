@@ -3,14 +3,14 @@ package it.fulminazzo.customenchants.enchants;
 import it.fulminazzo.customenchants.exceptions.EventHandlerAlreadyPresent;
 import it.fulminazzo.customenchants.exceptions.NotValidEventClass;
 import it.fulminazzo.customenchants.handlers.EventHandler;
-import it.fulminazzo.customenchants.utils.EventUtils;
-import it.fulminazzo.customenchants.utils.ReflectionUtils;
-import it.fulminazzo.customenchants.utils.VersionUtils;
+import it.fulminazzo.customenchants.utils.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public interface CustomEnchantment {
         if (!EventUtils.isClassEventPlayer(eventHandler.getEvent()))
             throw new NotValidEventClass(eventHandler.getEvent());
         getEventHandlers().put(name, eventHandler);
-        if (getPlugin() != null) eventHandler.register(this, getPlugin());
+        registerEventHandlers();
     }
 
     default void removeEventHandler(@NotNull String name) {
@@ -76,7 +76,7 @@ public interface CustomEnchantment {
     default void register() {
         try {
             if (VersionUtils.is1_(CRITICAL_VERSION2)) {
-                Map<?, Enchantment> cache = ReflectionUtils.getField(Registry.ENCHANTMENT.getClass(), "cache", Registry.ENCHANTMENT);
+                Map<?, Enchantment> cache = ReflectionUtils.getField(Registry.ENCHANTMENT.getClass(), "cache", Bukkit.getRegistry(Enchantment.class));
                 cache.put(getKey(), (Enchantment) this);
                 return;
             }
@@ -117,6 +117,29 @@ public interface CustomEnchantment {
 
     default void unregisterEventHandlers() {
         getEventHandlers().values().forEach(EventHandler::unregister);
+    }
+
+    /**
+     * Recommended way of applying a CustomEnchantment to an item.
+     *
+     * @param itemStack the item
+     */
+    default void apply(@Nullable ItemStack itemStack, int level) {
+        if (itemStack == null) return;
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) return;
+        ItemUtils.removeEnchantment(itemStack, this);
+        itemMeta.addEnchant((Enchantment) this, level, true);
+        itemStack.setItemMeta(itemMeta);
+        ItemUtils.editLore(itemStack, getLoreName("[MCDXLIV]+"), getLoreName(level));
+    }
+
+    default @NotNull String getLoreName(int level) {
+        return getLoreName(ItemUtils.toRoman(level));
+    }
+
+    default @NotNull String getLoreName(String level) {
+        return StringUtils.color(String.format("&7%s %s", StringUtils.capitalize(getName()), level));
     }
 
     String getName();

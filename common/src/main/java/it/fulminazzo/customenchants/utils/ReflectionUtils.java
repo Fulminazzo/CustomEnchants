@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -68,6 +71,27 @@ public class ReflectionUtils {
         return new LinkedHashSet<>(classes);
     }
 
+    public static @NotNull List<Object> getFieldsAndMethodsResults(@NotNull Class<?> clazz, Object object, Class<?>... classes) {
+        List<Object> objects = getFields(clazz, object).stream().distinct()
+                .filter(o -> o == null || Arrays.asList(classes).contains(o.getClass()))
+                .collect(Collectors.toList());
+        getMethods(clazz).stream()
+                .filter(m -> !m.getDeclaringClass().equals(Object.class))
+                .filter(m -> !Modifier.isStatic(m.getModifiers()))
+                .filter(m -> m.getParameterCount() == 0)
+                .filter(m -> Arrays.asList(classes).contains(m.getReturnType()))
+                .peek(m -> m.setAccessible(true))
+                .map(m -> {
+                    try {
+                        return m.invoke(object);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .forEach(objects::add);
+        return objects;
+    }
+
     public static <T> T getField(@NotNull Class<?> clazz, String name, Object object) {
         try {
             return (T) getField(clazz, name).get(object);
@@ -94,6 +118,19 @@ public class ReflectionUtils {
                 }).collect(Collectors.toList());
     }
 
+    public static <T> @NotNull List<T> getFields(@NotNull Class<?> clazz, Object object) {
+        return getFields(clazz).stream()
+                .filter(f -> !Modifier.isStatic(f.getModifiers()))
+                .map(f -> {
+                    try {
+                        f.setAccessible(true);
+                        return (T) f.get(object);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toList());
+    }
+
     public static @NotNull List<Field> getFields(@NotNull Class<?> clazz, @NotNull Class<?> type) {
         return getFields(clazz).stream()
                 .filter(f -> type.isAssignableFrom(f.getType()))
@@ -109,6 +146,16 @@ public class ReflectionUtils {
             clazz = clazz.getSuperclass();
         }
         return fields;
+    }
+
+    public static @NotNull List<Method> getMethods(@NotNull Class<?> clazz) {
+        List<Method> methods = new ArrayList<>();
+        while (clazz != null) {
+            methods.addAll(Arrays.asList(clazz.getMethods()));
+            methods.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+            clazz = clazz.getSuperclass();
+        }
+        return methods;
     }
 
     @NotNull

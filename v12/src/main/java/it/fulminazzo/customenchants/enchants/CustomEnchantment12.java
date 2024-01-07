@@ -1,6 +1,7 @@
 package it.fulminazzo.customenchants.enchants;
 
 import it.fulminazzo.customenchants.handlers.EventHandler;
+import it.fulminazzo.customenchants.utils.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.enchantments.Enchantment;
@@ -30,7 +31,7 @@ class CustomEnchantment12 extends Enchantment implements CustomEnchantment {
     public CustomEnchantment12(JavaPlugin plugin, @NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
         super(getUnusedID());
         this.plugin = plugin;
-        this.name = name.toUpperCase();
+        this.name = StringUtils.toSnakeCase(name);
         this.maxLevel = maxLevel;
         this.itemTarget = itemTarget;
         this.conflicts = new ArrayList<>();

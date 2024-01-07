@@ -2,11 +2,11 @@ package it.fulminazzo.customenchants.handlers;
 
 import it.fulminazzo.customenchants.enchants.CustomEnchantment;
 import it.fulminazzo.customenchants.enchants.EnchantListener;
+import it.fulminazzo.customenchants.enums.SingleHandler;
 import it.fulminazzo.customenchants.utils.ReflectionUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
@@ -44,12 +44,11 @@ public class EventHandler<T extends Event> {
             listener = new EnchantListener();
             Bukkit.getPluginManager().registerEvent(event, listener, EventPriority.NORMAL, (l, e) -> {
                 if (!event.equals(e.getClass())) return;
-                if (ReflectionUtils.getFields(e.getClass(), Entity.class, e).stream()
-                        .filter(en -> en instanceof LivingEntity || en instanceof Item)
+                if (ReflectionUtils.getFieldsAndMethodsResults(e.getClass(), e, LivingEntity.class, Item.class, ItemStack.class).stream().distinct()
                         .anyMatch(en -> {
                             List<ItemStack> itemStacks = new ArrayList<>();
                             if (en instanceof Item) itemStacks.add(((Item) en).getItemStack());
-                            else {
+                            else if (en instanceof LivingEntity) {
                                 EntityEquipment equipment = ((LivingEntity) en).getEquipment();
                                 if (equipment == null) return false;
                                 itemStacks.add(equipment.getHelmet());
@@ -58,7 +57,8 @@ public class EventHandler<T extends Event> {
                                 itemStacks.add(equipment.getBoots());
                                 itemStacks.add(equipment.getItemInMainHand());
                                 itemStacks.add(equipment.getItemInOffHand());
-                            }
+                            } else itemStacks.add((ItemStack) en);
+                            SingleHandler.handleEvent(e, itemStacks);
                             return itemStacks.stream()
                                     .filter(Objects::nonNull)
                                     .anyMatch(i -> i.getEnchantments().containsKey((Enchantment) enchantment));

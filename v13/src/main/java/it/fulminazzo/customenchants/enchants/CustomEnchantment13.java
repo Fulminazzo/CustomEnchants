@@ -1,6 +1,7 @@
 package it.fulminazzo.customenchants.enchants;
 
 import it.fulminazzo.customenchants.handlers.EventHandler;
+import it.fulminazzo.customenchants.utils.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
@@ -29,9 +30,9 @@ class CustomEnchantment13 extends Enchantment implements CustomEnchantment {
     private final @NotNull HashMap<String, EventHandler<?>> eventHandlers;
 
     public CustomEnchantment13(JavaPlugin plugin, @NotNull String name, int maxLevel, @NotNull EnchantmentTarget itemTarget, Enchantment @Nullable ... conflicts) {
-        super(NamespacedKey.minecraft(name));
+        super(NamespacedKey.minecraft(name.toLowerCase()));
         this.plugin = plugin;
-        this.name = name.toUpperCase();
+        this.name = StringUtils.toSnakeCase(name);
         this.maxLevel = maxLevel;
         this.itemTarget = itemTarget;
         this.conflicts = new ArrayList<>();
