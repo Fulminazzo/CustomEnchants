@@ -7,13 +7,13 @@ import it.fulminazzo.customenchants.utils.EnchantedItemUtils;
 import it.fulminazzo.customenchants.utils.ReflectionUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -48,17 +48,10 @@ public class EventHandler<T extends Event> {
                         .anyMatch(en -> {
                             List<ItemStack> itemStacks = new ArrayList<>();
                             if (en instanceof Item) itemStacks.add(((Item) en).getItemStack());
-                            else if (en instanceof LivingEntity) {
-                                EntityEquipment equipment = ((LivingEntity) en).getEquipment();
-                                if (equipment == null) return false;
-                                itemStacks.add(equipment.getHelmet());
-                                itemStacks.add(equipment.getChestplate());
-                                itemStacks.add(equipment.getLeggings());
-                                itemStacks.add(equipment.getBoots());
-                                itemStacks.add(equipment.getItemInMainHand());
-                                itemStacks.add(equipment.getItemInOffHand());
-                            } else itemStacks.add((ItemStack) en);
+                            else if (en instanceof LivingEntity) SingleHandler.handleEntity((Entity) en, itemStacks);
+                            else itemStacks.add((ItemStack) en);
                             SingleHandler.handleEvent(e, itemStacks);
+                            System.out.println("Checking: " + itemStacks);
                             return itemStacks.stream()
                                     .filter(Objects::nonNull)
                                     .anyMatch(i -> EnchantedItemUtils.hasCustomEnchant(i, enchantment));

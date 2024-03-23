@@ -1,5 +1,7 @@
 package it.fulminazzo.customenchants.enums;
 
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -7,6 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,5 +49,17 @@ public enum SingleHandler {
                 singleHandler.handler.accept(event, items);
                 break;
             }
+    }
+
+    public static void handleEntity(Entity entity, List<ItemStack> itemStacks) {
+        if (!(entity instanceof LivingEntity)) return;
+        EntityEquipment equipment = ((LivingEntity) entity).getEquipment();
+        if (equipment == null) return;
+        itemStacks.add(equipment.getHelmet());
+        itemStacks.add(equipment.getChestplate());
+        itemStacks.add(equipment.getLeggings());
+        itemStacks.add(equipment.getBoots());
+        itemStacks.add(equipment.getItemInMainHand());
+        itemStacks.add(equipment.getItemInOffHand());
     }
 }
