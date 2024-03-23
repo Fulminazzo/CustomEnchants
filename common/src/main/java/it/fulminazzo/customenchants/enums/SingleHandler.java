@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
@@ -28,6 +29,10 @@ public enum SingleHandler {
     INVENTORY_CLICK_EVENT(InventoryClickEvent.class, (event, itemStacks) -> {
         itemStacks.add(event.getCurrentItem());
         itemStacks.add(event.getCursor());
+    }),
+    ENTITY_DAMAGE_BY_ENTITY_EVENT(EntityDamageByEntityEvent.class, (event, itemStacks) -> {
+        handleEntity(event.getEntity(), itemStacks);
+        handleEntity(event.getDamager(), itemStacks);
     }),
     INVENTORY_CREATIVE_EVENT(InventoryCreativeEvent.class, (event, itemStacks) -> {
         itemStacks.add(event.getCurrentItem());
