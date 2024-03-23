@@ -3,10 +3,10 @@ package it.fulminazzo.customenchants.handlers;
 import it.fulminazzo.customenchants.enchants.CustomEnchantment;
 import it.fulminazzo.customenchants.enchants.EnchantListener;
 import it.fulminazzo.customenchants.enums.SingleHandler;
+import it.fulminazzo.customenchants.utils.EnchantedItemUtils;
 import it.fulminazzo.customenchants.utils.ReflectionUtils;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
@@ -61,7 +61,7 @@ public class EventHandler<T extends Event> {
                             SingleHandler.handleEvent(e, itemStacks);
                             return itemStacks.stream()
                                     .filter(Objects::nonNull)
-                                    .anyMatch(i -> i.getEnchantments().containsKey((Enchantment) enchantment));
+                                    .anyMatch(i -> EnchantedItemUtils.hasCustomEnchant(i, enchantment));
                         })) apply((T) e);
             }, plugin);
         }
