@@ -51,7 +51,6 @@ public class EventHandler<T extends Event> {
                             else if (en instanceof LivingEntity) SingleHandler.handleEntity((Entity) en, itemStacks);
                             else itemStacks.add((ItemStack) en);
                             SingleHandler.handleEvent(e, itemStacks);
-                            System.out.println("Checking: " + itemStacks);
                             return itemStacks.stream()
                                     .filter(Objects::nonNull)
                                     .anyMatch(i -> EnchantedItemUtils.hasCustomEnchant(i, enchantment));
