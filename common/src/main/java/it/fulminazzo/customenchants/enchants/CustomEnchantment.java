@@ -128,14 +128,14 @@ public interface CustomEnchantment {
         if (itemStack == null) return;
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null) return;
-        ItemUtils.removeEnchantment(itemStack, this);
+        EnchantedItemUtils.removeEnchantment(itemStack, this);
         itemMeta.addEnchant((Enchantment) this, level, true);
         itemStack.setItemMeta(itemMeta);
-        ItemUtils.editLore(itemStack, getLoreName("[MCDXLIV]+"), getLoreName(level));
+        EnchantedItemUtils.editLore(itemStack, getLoreName("[MCDXLIV]+"), getLoreName(level));
     }
 
     default @NotNull String getLoreName(int level) {
-        return getLoreName(ItemUtils.toRoman(level));
+        return getLoreName(EnchantedItemUtils.toRoman(level));
     }
 
     default @NotNull String getLoreName(String level) {

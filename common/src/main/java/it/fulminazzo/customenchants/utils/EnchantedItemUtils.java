@@ -9,13 +9,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
- * The type Item utils.
+ * The type Enchanted item utils.
  */
-public class ItemUtils {
+public class EnchantedItemUtils {
 
     /**
      * Compare two items by removing their custom enchantments and calling {@link ItemStack#isSimilar(ItemStack)}.
